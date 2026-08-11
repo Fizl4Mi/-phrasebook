@@ -205,48 +205,50 @@ const LANGS = [
   {
     code:"fr", bcp:"fr-FR", label:"Français", leg:"Paris", color:"var(--fr)",
     words:[
-      {w:"Bonjour", en:"Hello / good morning", ph:"bohn-ZHOOR", tip:"Say it the moment you walk into any shop — skipping it reads as rude."},
-      {w:"Bonsoir", en:"Good evening (after ~6pm)", ph:"bohn-SWAHR"},
+      {w:"Bonjour", en:"Hello / good morning", ph:"bohn-ZHOOR", tip:"Say it the moment you walk into any shop — skipping it reads as rude. Works until about 6pm."},
+      {w:"Bon après-midi", en:"Good afternoon (as a goodbye)", ph:"bohn ah-preh mee-DEE", tip:"A goodbye, not a greeting — say it when leaving. To greet someone at 2pm, it's still Bonjour."},
+      {w:"Bonsoir", en:"Good evening", ph:"bohn-SWAHR", tip:"Replaces Bonjour after ~6pm — works as both hello and goodbye in the evening."},
       {w:"Oui", en:"Yes", ph:"wee"},
-      {w:"Non", en:"No", ph:"nohn"},
-      {w:"S'il vous plaît", en:"Please", ph:"seel voo PLEH"},
-      {w:"Merci", en:"Thank you", ph:"mair-SEE"},
-      {w:"Excusez-moi", en:"Excuse me", ph:"ex-koo-zay MWAH"},
-      {w:"Au revoir", en:"Goodbye", ph:"oh ruh-VWAHR", alts:["aurevoir"]},
-      {w:"Bonne nuit", en:"Good night (bedtime only)", ph:"bun NWEE"}
+      {w:"Non", en:"No", ph:"nohn", tip:"'Non, merci' — polite but firm — is the move for street vendors."},
+      {w:"S'il vous plaît", en:"Please", ph:"seel voo PLEH", tip:"Attach to any request. Also how you flag a waiter: a raised hand and 's'il vous plaît' — never 'garçon.'"},
+      {w:"Merci", en:"Thank you", ph:"mair-SEE", tip:"'Merci beaucoup' adds warmth. Careful at the table: a bare 'merci' when offered more can mean 'no, thanks.'"},
+      {w:"Excusez-moi", en:"Excuse me", ph:"ex-koo-zay MWAH", tip:"For getting attention or apologizing. A quick 'pardon' does the job when squeezing through a crowd."},
+      {w:"Au revoir", en:"Goodbye", ph:"oh ruh-VWAHR", alts:["aurevoir"], tip:"Shopkeepers expect it on your way out, just like Bonjour on the way in."},
+      {w:"Bonne nuit", en:"Good night", ph:"bun NWEE", tip:"Only for someone actually heading to bed — leaving a restaurant at 10pm is still Bonsoir."}
     ]
   },
   {
     code:"de", bcp:"de-DE", label:"Deutsch", leg:"Zermatt", color:"var(--de)",
     words:[
       {w:"Grüezi", en:"Hello (Swiss)", ph:"GREW-eh-tsee", bcp:"de-CH", swiss:true,
-       tip:"Gets a warmer reception than Hallo in Zermatt. Dialect word — scoring is approximate.", alts:["grüessech","grüetzi","gruezi"]},
-      {w:"Hallo", en:"Hello", ph:"HAH-loh"},
+       tip:"The Zermatt greeting, any hour of the day — warmer than Hallo. Dialect word, so scoring is approximate.", alts:["grüessech","grüetzi","gruezi"]},
+      {w:"Hallo", en:"Hello", ph:"HAH-loh", tip:"Friendly and safe anywhere, any time of day."},
       {w:"Ja", en:"Yes", ph:"yah"},
-      {w:"Nein", en:"No", ph:"nine"},
-      {w:"Bitte", en:"Please / you're welcome", ph:"BIT-teh"},
-      {w:"Danke", en:"Thank you", ph:"DAHN-keh"},
-      {w:"Guten Morgen", en:"Good morning", ph:"GOO-ten MOR-gen"},
-      {w:"Guten Abend", en:"Good evening", ph:"GOO-ten AH-bent"},
-      {w:"Gute Nacht", en:"Good night", ph:"GOO-teh NAHKHT"},
-      {w:"Entschuldigung", en:"Excuse me", ph:"ent-SHOOL-dee-goong"},
-      {w:"Auf Wiedersehen", en:"Goodbye", ph:"owf VEE-der-zayn", alts:["auf wiedersehn"]}
+      {w:"Nein", en:"No", ph:"nine", tip:"'Nein, danke' is the polite pass."},
+      {w:"Bitte", en:"Please / you're welcome", ph:"BIT-teh", tip:"The Swiss-army word: please, you're welcome, 'here you go,' even 'pardon?' if you missed something."},
+      {w:"Danke", en:"Thank you", ph:"DAHN-keh", tip:"In Zermatt you'll hear 'merci vilmal' — Swiss German borrowed the French. Danke works everywhere too."},
+      {w:"Guten Morgen", en:"Good morning", ph:"GOO-ten MOR-gen", tip:"Until about 11am, then it hands off to Guten Tag."},
+      {w:"Guten Tag", en:"Good day / afternoon", ph:"GOO-ten TAHK", tip:"The all-day default from late morning on — German skips 'good afternoon' entirely."},
+      {w:"Guten Abend", en:"Good evening", ph:"GOO-ten AH-bent", tip:"From roughly 6pm — a greeting, not a farewell."},
+      {w:"Gute Nacht", en:"Good night", ph:"GOO-teh NAHKHT", tip:"Bedtime only — the last words of the night, not an evening hello."},
+      {w:"Entschuldigung", en:"Excuse me", ph:"ent-SHOOL-dee-goong", tip:"Covers everything: getting attention, apologizing, and squeezing past someone on the train."},
+      {w:"Auf Wiedersehen", en:"Goodbye", ph:"owf VEE-der-zayn", alts:["auf wiedersehn"], tip:"The formal goodbye. Locals toss around a casual 'Tschüss' — fine to use back."}
     ]
   },
   {
     code:"it", bcp:"it-IT", label:"Italiano", leg:"Milano → Venezia", color:"var(--it)",
     words:[
-      {w:"Buongiorno", en:"Good morning / hello", ph:"bwohn-JOR-noh", tip:"The safe greeting with anyone you don't know."},
-      {w:"Buonasera", en:"Good evening", ph:"bwoh-nah-SEH-rah"},
-      {w:"Ciao", en:"Hi / bye (informal only)", ph:"chow"},
+      {w:"Buongiorno", en:"Good morning / hello", ph:"bwohn-JOR-noh", tip:"The safe greeting with anyone you don't know — carries you from morning through mid-afternoon."},
+      {w:"Buonasera", en:"Good evening", ph:"bwoh-nah-SEH-rah", tip:"Takes over surprisingly early — by 4 or 5pm — and works as both hello and goodbye."},
+      {w:"Ciao", en:"Hi / bye (informal only)", ph:"chow", tip:"Friends only. With waiters, shopkeepers, and hotel staff, use Buongiorno/Buonasera and Arrivederci instead."},
       {w:"Sì", en:"Yes", ph:"see"},
-      {w:"No", en:"No", ph:"noh"},
+      {w:"No", en:"No", ph:"noh", tip:"'No, grazie' — said firmly — is your tool for Venice street sellers."},
       {w:"Per favore", en:"Please", ph:"pair fah-VOH-reh"},
-      {w:"Grazie", en:"Thank you", ph:"GRAHT-tsyeh"},
-      {w:"Scusi", en:"Excuse me (to get attention)", ph:"SKOO-zee"},
-      {w:"Permesso", en:"Excuse me (to get past)", ph:"pair-MESS-soh", tip:"Your vaporetto word."},
-      {w:"Arrivederci", en:"Goodbye", ph:"ah-ree-veh-DAIR-chee"},
-      {w:"Buonanotte", en:"Good night", ph:"bwoh-nah-NOT-teh"}
+      {w:"Grazie", en:"Thank you", ph:"GRAHT-tsyeh", tip:"Three syllables — GRAHT-tsyeh, never 'gratzi.' 'Grazie mille' for extra warmth."},
+      {w:"Scusi", en:"Excuse me (to get attention)", ph:"SKOO-zee", tip:"The formal excuse-me for strangers and waiters — the safe default over the informal 'scusa.'"},
+      {w:"Permesso", en:"Excuse me (to get past)", ph:"pair-MESS-soh", tip:"For physically moving past people — your vaporetto word. Scusi gets attention; Permesso gets you through."},
+      {w:"Arrivederci", en:"Goodbye", ph:"ah-ree-veh-DAIR-chee", tip:"The polite goodbye for shops and restaurants — Ciao's formal counterpart."},
+      {w:"Buonanotte", en:"Good night", ph:"bwoh-nah-NOT-teh", tip:"Bedtime only — leaving dinner at 10pm calls for Buonasera or Arrivederci."}
     ]
   }
 ];
