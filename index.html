@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Trip Phrasebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#101823;
+    --panel:#1A2432;
+    --panel-hi:#212D3E;
+    --paper:#F2EFE6;
+    --muted:#8A94A4;
+    --line:#2A3648;
+    --fr:#7FA8FF;
+    --de:#E8606B;
+    --it:#6FCF97;
+    --ok:#8FD8A0;
+    --near:#E6B455;
+    --miss:#E8848D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--night);
+    color:var(--paper);
+    font-family:"Instrument Sans",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    min-height:100vh;
+    padding-bottom:48px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 18px}
+
+  /* ---------- header ---------- */
+  header{padding:26px 0 10px}
+  .eyebrow{
+    font-family:"Spline Sans Mono",monospace;
+    font-size:11px;letter-spacing:.14em;
+    color:var(--muted);text-transform:uppercase;
+  }
+  h1{
+    font-family:"Bricolage Grotesque",sans-serif;
+    font-weight:700;font-size:34px;line-height:1.08;
+    margin:6px 0 14px;letter-spacing:-.01em;
+  }
+  .route{
+    display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;
+    font-family:"Spline Sans Mono",monospace;
+    font-size:12px;color:var(--muted);
+    padding-bottom:18px;border-bottom:1px solid var(--line);
+  }
+  .route .stop{display:flex;align-items:center;gap:6px}
+  .route .dot{width:6px;height:6px;border-radius:50%}
+  .route .arrow{color:var(--line)}
+
+  /* ---------- banner ---------- */
+  .banner{
+    display:none;
+    margin:16px 0 0;padding:12px 14px;
+    background:var(--panel-hi);
+    border:1px solid var(--line);
+    border-left:3px solid var(--near);
+    border-radius:10px;
+    font-size:14px;color:var(--paper);
+  }
+  .banner.show{display:block}
+  .banner b{font-weight:600}
+
+  /* ---------- tabs ---------- */
+  nav{display:flex;gap:8px;margin:18px 0 6px}
+  .tab{
+    flex:1;min-height:56px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--muted);
+    font-family:"Instrument Sans",sans-serif;
+    font-size:15px;font-weight:600;
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    padding:8px 4px;
+    transition:border-color .15s,color .15s;
+  }
+  .tab small{
+    font-family:"Spline Sans Mono",monospace;
+    font-weight:400;font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .tab[aria-selected="true"]{color:var(--paper);border-color:var(--acc);box-shadow:inset 0 -3px 0 var(--acc)}
+  .tab:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+
+  /* ---------- cards ---------- */
+  .cards{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 14px 12px;
+  }
+  .card .top{display:flex;align-items:flex-start;gap:10px}
+  .card .txt{flex:1;min-width:0}
+  .word{
+    font-family:"Bricolage Grotesque",sans-serif;
+    font-weight:600;font-size:24px;line-height:1.15;
+    letter-spacing:-.005em;
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  }
+  .swiss{
+    font-family:"Spline Sans Mono",monospace;
+    font-size:10px;letter-spacing:.08em;font-weight:400;
+    color:var(--night);background:var(--acc);
+    padding:2px 6px;border-radius:5px;
+    transform:translateY(-3px);
+  }
+  .gloss{color:var(--muted);font-size:14px;margin-top:2px}
+  .phon{
+    font-family:"Spline Sans Mono",monospace;
+    font-style:italic;font-size:13px;
+    color:var(--acc);margin-top:5px;
+  }
+  .tip{color:var(--muted);font-size:13px;margin-top:6px;padding-left:10px;border-left:2px solid var(--line)}
+
+  .btns{display:flex;gap:8px;flex-shrink:0}
+  .rbtn{
+    width:50px;height:50px;border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--panel-hi);
+    color:var(--paper);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s,border-color .15s;
+    touch-action:manipulation;
+  }
+  .rbtn:active{background:var(--line)}
+  .rbtn:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  .rbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .rbtn.mic.listening{background:var(--acc);border-color:var(--acc);color:var(--night);animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 9px rgba(255,255,255,.07)}}
+  @media (prefers-reduced-motion:reduce){.rbtn.mic.listening{animation:none}}
+
+  .fb{
+    display:none;
+    margin-top:11px;padding:9px 11px;
+    border-radius:9px;
+    background:var(--panel-hi);
+    font-size:14px;line-height:1.4;
+  }
+  .fb.show{display:block}
+  .fb.ok{border-left:3px solid var(--ok);color:var(--ok)}
+  .fb.near{border-left:3px solid var(--near);color:var(--near)}
+  .fb.miss{border-left:3px solid var(--miss);color:var(--miss)}
+  .fb.info{border-left:3px solid var(--muted);color:var(--paper)}
+  .fb .heard{color:var(--paper)}
+  .tally{
+    font-family:"Spline Sans Mono",monospace;
+    font-size:11px;color:var(--ok);
+    margin-left:auto;align-self:center;white-space:nowrap;
+  }
+
+  footer{
+    margin-top:26px;
+    font-size:12.5px;color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Trip phrasebook · FR / DE / IT</div>
+    <h1>Say it like a local</h1>
+    <div class="route" aria-hidden="true">
+      <span class="stop"><span class="dot" style="background:var(--fr)"></span>Paris</span>
+      <span class="arrow">→</span>
+      <span class="stop"><span class="dot" style="background:var(--de)"></span>Zermatt</span>
+      <span class="arrow">→</span>
+      <span class="stop"><span class="dot" style="background:var(--it)"></span>Milano</span>
+      <span class="arrow">→</span>
+      <span class="stop"><span class="dot" style="background:var(--it)"></span>Venezia</span>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <nav role="tablist" aria-label="Language" id="tabs"></nav>
+
+  <div class="cards" id="cards"></div>
+
+  <footer>
+    Tap the speaker to hear a word, the mic to say it back. Scoring asks one question: would a native-trained
+    listener have understood you? It checks intelligibility, not accent. Progress resets when the page reloads.
+  </footer>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------ data */
+const LANGS = [
+  {
+    code:"fr", bcp:"fr-FR", label:"Français", leg:"Paris", color:"var(--fr)",
+    words:[
+      {w:"Bonjour", en:"Hello / good morning", ph:"bohn-ZHOOR", tip:"Say it the moment you walk into any shop — skipping it reads as rude."},
+      {w:"Bonsoir", en:"Good evening (after ~6pm)", ph:"bohn-SWAHR"},
+      {w:"Oui", en:"Yes", ph:"wee"},
+      {w:"Non", en:"No", ph:"nohn"},
+      {w:"S'il vous plaît", en:"Please", ph:"seel voo PLEH"},
+      {w:"Merci", en:"Thank you", ph:"mair-SEE"},
+      {w:"Excusez-moi", en:"Excuse me", ph:"ex-koo-zay MWAH"},
+      {w:"Au revoir", en:"Goodbye", ph:"oh ruh-VWAHR", alts:["aurevoir"]},
+      {w:"Bonne nuit", en:"Good night (bedtime only)", ph:"bun NWEE"}
+    ]
+  },
+  {
+    code:"de", bcp:"de-DE", label:"Deutsch", leg:"Zermatt", color:"var(--de)",
+    words:[
+      {w:"Grüezi", en:"Hello (Swiss)", ph:"GREW-eh-tsee", bcp:"de-CH", swiss:true,
+       tip:"Gets a warmer reception than Hallo in Zermatt. Dialect word — scoring is approximate.", alts:["grüessech","grüetzi","gruezi"]},
+      {w:"Hallo", en:"Hello", ph:"HAH-loh"},
+      {w:"Ja", en:"Yes", ph:"yah"},
+      {w:"Nein", en:"No", ph:"nine"},
+      {w:"Bitte", en:"Please / you're welcome", ph:"BIT-teh"},
+      {w:"Danke", en:"Thank you", ph:"DAHN-keh"},
+      {w:"Guten Morgen", en:"Good morning", ph:"GOO-ten MOR-gen"},
+      {w:"Guten Abend", en:"Good evening", ph:"GOO-ten AH-bent"},
+      {w:"Gute Nacht", en:"Good night", ph:"GOO-teh NAHKHT"},
+      {w:"Entschuldigung", en:"Excuse me", ph:"ent-SHOOL-dee-goong"},
+      {w:"Auf Wiedersehen", en:"Goodbye", ph:"owf VEE-der-zayn", alts:["auf wiedersehn"]}
+    ]
+  },
+  {
+    code:"it", bcp:"it-IT", label:"Italiano", leg:"Milano → Venezia", color:"var(--it)",
+    words:[
+      {w:"Buongiorno", en:"Good morning / hello", ph:"bwohn-JOR-noh", tip:"The safe greeting with anyone you don't know."},
+      {w:"Buonasera", en:"Good evening", ph:"bwoh-nah-SEH-rah"},
+      {w:"Ciao", en:"Hi / bye (informal only)", ph:"chow"},
+      {w:"Sì", en:"Yes", ph:"see"},
+      {w:"No", en:"No", ph:"noh"},
+      {w:"Per favore", en:"Please", ph:"pair fah-VOH-reh"},
+      {w:"Grazie", en:"Thank you", ph:"GRAHT-tsyeh"},
+      {w:"Scusi", en:"Excuse me (to get attention)", ph:"SKOO-zee"},
+      {w:"Permesso", en:"Excuse me (to get past)", ph:"pair-MESS-soh", tip:"Your vaporetto word."},
+      {w:"Arrivederci", en:"Goodbye", ph:"ah-ree-veh-DAIR-chee"},
+      {w:"Buonanotte", en:"Good night", ph:"bwoh-nah-NOT-teh"}
+    ]
+  }
+];
+
+/* ------------------------------------------------------------------ state */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let activeLang = 0;
+let activeRec = null;          // running recognition instance
+let activeMicBtn = null;       // its button, to clear the listening state
+const tallies = {};            // wordKey -> success count (session only)
+
+const $banner = document.getElementById("banner");
+const $tabs   = document.getElementById("tabs");
+const $cards  = document.getElementById("cards");
+
+/* ------------------------------------------------------------------ env checks */
+function showBanner(html){ $banner.innerHTML = html; $banner.classList.add("show"); }
+
+if(!SR){
+  showBanner("<b>This browser can't score speech.</b> Open this page in Chrome — the speaker buttons still work here.");
+}else if(!window.isSecureContext){
+  showBanner("<b>Microphone needs a secure page.</b> Open this file from an https address (see the hosting note) — the speaker buttons still work here.");
+}
+
+function micBlockedBanner(){
+  showBanner("<b>Microphone is blocked in this view.</b> Host this file at an https address (GitHub Pages works) and open that link in Chrome — listening works there. The speaker buttons work everywhere.");
+}
+
+/* ------------------------------------------------------------------ text-to-speech */
+let voices = [];
+function loadVoices(){ voices = speechSynthesis.getVoices(); }
+loadVoices();
+if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged = loadVoices; }
+
+function pickVoice(bcp){
+  const base = bcp.split("-")[0];
+  return voices.find(v=>v.lang===bcp || v.lang.replace("_","-")===bcp)
+      || voices.find(v=>v.lang.toLowerCase().startsWith(base))
+      || null;
+}
+function speak(text,bcp){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(bcp);
+  if(v) u.voice = v;
+  u.lang = bcp;
+  u.rate = 0.88;
+  speechSynthesis.speak(u);
+}
+
+/* ------------------------------------------------------------------ scoring */
+function norm(s){
+  return s.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[’']/g,"")
+    .replace(/[^a-z\u00df\s]/g," ")
+    .replace(/\s+/g," ").trim();
+}
+function lev(a,b){
+  const m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i), cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return prev[n];
+}
+function sim(a,b){
+  const L=Math.max(a.length,b.length);
+  return L? 1 - lev(a,b)/L : 0;
+}
+/* best similarity of target against a candidate, allowing the target to
+   appear anywhere inside a longer utterance (token windows) */
+function bestSim(target,candidate){
+  let best = sim(target,candidate);
+  const tTok = target.split(" "), cTok = candidate.split(" ");
+  const k = tTok.length;
+  for(let i=0;i+k<=cTok.length;i++){
+    best = Math.max(best, sim(target, cTok.slice(i,i+k).join(" ")));
+  }
+  return best;
+}
+function scoreAttempt(word, transcripts){
+  const targets = [word.w, ...(word.alts||[])].map(norm);
+  let best = 0, heard = transcripts[0]||"";
+  for(const t of transcripts){
+    const c = norm(t);
+    for(const tg of targets){
+      const s = bestSim(tg,c);
+      if(s>best){ best=s; heard=t; }
+    }
+  }
+  const short = norm(word.w).replace(/\s/g,"").length <= 3;
+  const okAt = short ? 0.95 : 0.84;
+  if(best >= okAt) return {grade:"ok", heard};
+  if(best >= 0.55) return {grade:"near", heard};
+  return {grade:"miss", heard};
+}
+
+/* ------------------------------------------------------------------ recognition */
+function stopActive(){
+  if(activeRec){ try{activeRec.abort();}catch(e){} activeRec=null; }
+  if(activeMicBtn){ activeMicBtn.classList.remove("listening"); activeMicBtn=null; }
+}
+function listen(word, bcp, micBtn, fbEl, tallyEl, key){
+  if(!SR){ micBlockedBanner(); return; }
+  if(micBtn.classList.contains("listening")){ stopActive(); return; }
+  stopActive();
+  speechSynthesis.cancel();
+
+  const rec = new SR();
+  rec.lang = bcp;
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 5;
+
+  activeRec = rec; activeMicBtn = micBtn;
+  micBtn.classList.add("listening");
+  setFb(fbEl,"info","Listening — say it now");
+
+  let got = false;
+
+  rec.onresult = (e)=>{
+    got = true;
+    const alts=[];
+    for(let i=0;i<e.results.length;i++){
+      const res=e.results[i];
+      for(let j=0;j<res.length;j++){ if(res[j].transcript) alts.push(res[j].transcript.trim()); }
+    }
+    const {grade,heard} = scoreAttempt(word, alts);
+    if(grade==="ok"){
+      tallies[key]=(tallies[key]||0)+1;
+      tallyEl.textContent = "✓ "+tallies[key];
+      setFb(fbEl,"ok",`Understood — heard <span class="heard">« ${esc(heard)} »</span>`);
+    }else if(grade==="near"){
+      setFb(fbEl,"near",`Close — heard <span class="heard">« ${esc(heard)} »</span>. Tap the speaker, then go again.`);
+    }else{
+      setFb(fbEl,"miss",`Heard <span class="heard">« ${esc(heard)} »</span> — listen first, then try again.`);
+    }
+  };
+  rec.onerror = (e)=>{
+    got = true;
+    if(e.error==="not-allowed" || e.error==="service-not-allowed"){
+      micBlockedBanner();
+      setFb(fbEl,"info","Mic blocked here — see the note above.");
+    }else if(e.error==="no-speech"){
+      setFb(fbEl,"info","Didn't catch anything — hold the phone closer and try again.");
+    }else if(e.error==="network"){
+      setFb(fbEl,"info","Speech scoring needs an internet connection.");
+    }else{
+      setFb(fbEl,"info","Couldn't listen ("+esc(e.error)+") — try again.");
+    }
+  };
+  rec.onend = ()=>{
+    if(!got) setFb(fbEl,"info","Didn't catch anything — try again.");
+    if(activeRec===rec){ activeRec=null; }
+    micBtn.classList.remove("listening");
+    if(activeMicBtn===micBtn) activeMicBtn=null;
+  };
+
+  try{ rec.start(); }
+  catch(err){ micBlockedBanner(); micBtn.classList.remove("listening"); }
+}
+
+function setFb(el,cls,html){
+  el.className = "fb show "+cls;
+  el.innerHTML = html;
+}
+function esc(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ------------------------------------------------------------------ ui */
+const ICON_SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const ICON_MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
+
+function render(){
+  const lang = LANGS[activeLang];
+
+  /* tabs */
+  $tabs.innerHTML="";
+  LANGS.forEach((L,i)=>{
+    const b=document.createElement("button");
+    b.className="tab"; b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", i===activeLang ? "true":"false");
+    b.style.setProperty("--acc",L.color);
+    b.innerHTML = `${L.label}<small>${L.leg}</small>`;
+    b.onclick=()=>{ stopActive(); activeLang=i; render(); };
+    $tabs.appendChild(b);
+  });
+
+  /* cards */
+  $cards.innerHTML="";
+  lang.words.forEach((word,wi)=>{
+    const key = lang.code+":"+wi;
+    const card=document.createElement("div");
+    card.className="card";
+    card.style.setProperty("--acc",lang.color);
+
+    const top=document.createElement("div"); top.className="top";
+    const txt=document.createElement("div"); txt.className="txt";
+    txt.innerHTML =
+      `<div class="word">${esc(word.w)}${word.swiss?'<span class="swiss">CH</span>':''}</div>`+
+      `<div class="gloss">${esc(word.en)}</div>`+
+      `<div class="phon">${esc(word.ph)}</div>`+
+      (word.tip?`<div class="tip">${esc(word.tip)}</div>`:"");
+
+    const btns=document.createElement("div"); btns.className="btns";
+    const bcp = word.bcp || lang.bcp;
+
+    const spk=document.createElement("button");
+    spk.className="rbtn"; spk.innerHTML=ICON_SPK;
+    spk.setAttribute("aria-label","Hear "+word.w);
+    spk.onclick=()=>{ stopActive(); speak(word.w,bcp); };
+
+    const mic=document.createElement("button");
+    mic.className="rbtn mic"; mic.innerHTML=ICON_MIC;
+    mic.setAttribute("aria-label","Say "+word.w);
+
+    btns.appendChild(spk); btns.appendChild(mic);
+    top.appendChild(txt); top.appendChild(btns);
+
+    const fb=document.createElement("div"); fb.className="fb";
+    const tally=document.createElement("span"); tally.className="tally";
+    if(tallies[key]) tally.textContent="✓ "+tallies[key];
+    btns.prepend(tally);
+
+    mic.onclick=()=>listen(word,bcp,mic,fb,tally,key);
+
+    card.appendChild(top); card.appendChild(fb);
+    $cards.appendChild(card);
+  });
+}
+render();
+</script>
+</body>
+</html>
