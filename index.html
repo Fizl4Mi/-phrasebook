@@ -167,6 +167,46 @@
     border-top:1px solid var(--line);
     padding-top:14px;
   }
+
+  /* ---------- quiz ---------- */
+  .quizbtn{
+    width:100%;margin-top:16px;min-height:54px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    color:var(--paper);cursor:pointer;
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:16px;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    touch-action:manipulation;
+  }
+  .quizbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+  .quizbtn:active{background:var(--panel-hi)}
+  .quizbtn:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+
+  #quiz{display:none;padding-top:20px}
+  body.quizzing #quiz{display:block}
+  body.quizzing header,body.quizzing #practice{display:none}
+
+  .qtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .qexit{background:none;border:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:10px 0}
+  .qprog{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+  .qcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 18px;text-align:center}
+  .qsay{font-family:"Spline Sans Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+  .qprompt{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:30px;line-height:1.12;margin:10px 0 22px}
+  .qmic{width:76px;height:76px;margin:0 auto}
+  .qmic svg{width:30px;height:30px}
+  .qcard .fb{text-align:left;margin-top:18px}
+  .qword{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:22px}
+  .qphon{font-family:"Spline Sans Mono",monospace;font-style:italic;font-size:13px;color:var(--acc);margin-top:2px}
+  .qactions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .qbtn2{min-height:46px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--panel-hi);color:var(--paper);font:inherit;font-size:15px;cursor:pointer;touch-action:manipulation}
+  .qbtn2.primary{background:var(--acc);border-color:var(--acc);color:var(--night);font-weight:600}
+  .qbtn2:focus-visible,.qexit:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  .qpick{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .qpick .tab{min-height:64px}
+  .qdone .score{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:54px;line-height:1;margin-top:8px}
+  .qmiss{margin-top:20px;border-top:1px solid var(--line);padding-top:14px;text-align:left}
+  .qmiss .item{padding:9px 0;border-bottom:1px solid var(--line)}
+  .qmiss .item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -188,14 +228,24 @@
 
   <div class="banner" id="banner"></div>
 
-  <nav role="tablist" aria-label="Language" id="tabs"></nav>
+  <div id="practice">
+    <div class="quizrow">
+      <button class="quizbtn" id="quizBtnSay"><span class="qbt">Say it</span><small>English → you speak the word</small></button>
+      <button class="quizbtn" id="quizBtnTrans"><span class="qbt">Translate it</span><small>Hear a word → give the English</small></button>
+    </div>
 
-  <div class="cards" id="cards"></div>
+    <nav role="tablist" aria-label="Language" id="tabs"></nav>
 
-  <footer>
-    Tap the speaker to hear a word, the mic to say it back. Scoring asks one question: would a native-trained
-    listener have understood you? It checks intelligibility, not accent. Progress resets when the page reloads.
-  </footer>
+    <div class="cards" id="cards"></div>
+
+    <footer>
+      Tap the speaker to hear a word, the mic to say it back. The quiz flips it: you get the English, you supply
+      the word. Scoring asks one question: would a native-trained listener have understood you? It checks
+      intelligibility, not accent. Progress resets when the page reloads.
+    </footer>
+  </div>
+
+  <div id="quiz"></div>
 
 </div>
 
@@ -358,7 +408,7 @@ function stopActive(){
   if(activeRec){ try{activeRec.abort();}catch(e){} activeRec=null; }
   if(activeMicBtn){ activeMicBtn.classList.remove("listening"); activeMicBtn=null; }
 }
-function listen(word, bcp, micBtn, fbEl, tallyEl, key){
+function startRecognition(bcp, micBtn, handlers){
   if(!SR){ micBlockedBanner(); return; }
   if(micBtn.classList.contains("listening")){ stopActive(); return; }
   stopActive();
@@ -372,7 +422,7 @@ function listen(word, bcp, micBtn, fbEl, tallyEl, key){
 
   activeRec = rec; activeMicBtn = micBtn;
   micBtn.classList.add("listening");
-  setFb(fbEl,"info","Listening — say it now");
+  handlers.onStart();
 
   let got = false;
 
@@ -383,32 +433,23 @@ function listen(word, bcp, micBtn, fbEl, tallyEl, key){
       const res=e.results[i];
       for(let j=0;j<res.length;j++){ if(res[j].transcript) alts.push(res[j].transcript.trim()); }
     }
-    const {grade,heard} = scoreAttempt(word, alts);
-    if(grade==="ok"){
-      tallies[key]=(tallies[key]||0)+1;
-      tallyEl.textContent = "✓ "+tallies[key];
-      setFb(fbEl,"ok",`Understood — heard <span class="heard">« ${esc(heard)} »</span>`);
-    }else if(grade==="near"){
-      setFb(fbEl,"near",`Close — heard <span class="heard">« ${esc(heard)} »</span>. Tap the speaker, then go again.`);
-    }else{
-      setFb(fbEl,"miss",`Heard <span class="heard">« ${esc(heard)} »</span> — listen first, then try again.`);
-    }
+    handlers.onAlts(alts);
   };
   rec.onerror = (e)=>{
     got = true;
     if(e.error==="not-allowed" || e.error==="service-not-allowed"){
       micBlockedBanner();
-      setFb(fbEl,"info","Mic blocked here — see the note above.");
+      handlers.onMsg("Mic blocked here — see the note above.");
     }else if(e.error==="no-speech"){
-      setFb(fbEl,"info","Didn't catch anything — hold the phone closer and try again.");
+      handlers.onMsg("Didn't catch anything — hold the phone closer and try again.");
     }else if(e.error==="network"){
-      setFb(fbEl,"info","Speech scoring needs an internet connection.");
+      handlers.onMsg("Speech scoring needs an internet connection.");
     }else{
-      setFb(fbEl,"info","Couldn't listen ("+esc(e.error)+") — try again.");
+      handlers.onMsg("Couldn't listen ("+esc(e.error)+") — try again.");
     }
   };
   rec.onend = ()=>{
-    if(!got) setFb(fbEl,"info","Didn't catch anything — try again.");
+    if(!got) handlers.onMsg("Didn't catch anything — try again.");
     if(activeRec===rec){ activeRec=null; }
     micBtn.classList.remove("listening");
     if(activeMicBtn===micBtn) activeMicBtn=null;
@@ -416,6 +457,25 @@ function listen(word, bcp, micBtn, fbEl, tallyEl, key){
 
   try{ rec.start(); }
   catch(err){ micBlockedBanner(); micBtn.classList.remove("listening"); }
+}
+
+function listen(word, bcp, micBtn, fbEl, tallyEl, key){
+  startRecognition(bcp, micBtn, {
+    onStart: ()=> setFb(fbEl,"info","Listening — say it now"),
+    onMsg:   (m)=> setFb(fbEl,"info",m),
+    onAlts:  (alts)=>{
+      const {grade,heard} = scoreAttempt(word, alts);
+      if(grade==="ok"){
+        tallies[key]=(tallies[key]||0)+1;
+        tallyEl.textContent = "✓ "+tallies[key];
+        setFb(fbEl,"ok",`Understood — heard <span class="heard">« ${esc(heard)} »</span>`);
+      }else if(grade==="near"){
+        setFb(fbEl,"near",`Close — heard <span class="heard">« ${esc(heard)} »</span>. Tap the speaker, then go again.`);
+      }else{
+        setFb(fbEl,"miss",`Heard <span class="heard">« ${esc(heard)} »</span> — listen first, then try again.`);
+      }
+    }
+  });
 }
 
 function setFb(el,cls,html){
@@ -485,6 +545,197 @@ function render(){
     $cards.appendChild(card);
   });
 }
+/* ------------------------------------------------------------------ quiz */
+const $quiz = document.getElementById("quiz");
+let quiz = null;
+let qTimer = null;
+
+document.getElementById("quizBtn").onclick = ()=>{
+  stopActive(); speechSynthesis.cancel();
+  quiz = {phase:"pick"};
+  document.body.classList.add("quizzing");
+  renderQuiz();
+  window.scrollTo(0,0);
+};
+
+function exitQuiz(){
+  stopActive(); speechSynthesis.cancel();
+  if(qTimer){ clearTimeout(qTimer); qTimer=null; }
+  quiz = null;
+  document.body.classList.remove("quizzing");
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuiz(langIdx){
+  if(qTimer){ clearTimeout(qTimer); qTimer=null; }
+  const L = LANGS[langIdx];
+  quiz = {
+    phase:"round", langIdx,
+    order: shuffle(L.words.map((_,i)=>i)),
+    idx:0, score:0, missed:[]
+  };
+  renderQuiz();
+  window.scrollTo(0,0);
+}
+
+/* did the speaker say a different (but real) word from this language? */
+function crossMatch(L, heard, exceptIdx){
+  const c = norm(heard);
+  for(let i=0;i<L.words.length;i++){
+    if(i===exceptIdx) continue;
+    const w = L.words[i];
+    const targets=[w.w, ...(w.alts||[])].map(norm);
+    for(const t of targets){ if(bestSim(t,c)>=0.85) return w; }
+  }
+  return null;
+}
+
+function qHeader(mid){
+  return `<div class="qtop">
+    <button class="qexit" id="qExit">← End quiz</button>
+    <span class="qprog">${mid}</span>
+  </div>`;
+}
+
+function renderQuiz(){
+  if(!quiz) return;
+
+  if(quiz.phase==="pick"){
+    $quiz.style.setProperty("--acc","var(--paper)");
+    $quiz.innerHTML = qHeader("Quiz") + `
+      <div class="qcard">
+        <div class="qsay" style="color:var(--muted)">English prompt → you say the word</div>
+        <div class="qprompt">Which language?</div>
+        <div class="qpick" id="qPick"></div>
+      </div>`;
+    document.getElementById("qExit").onclick = exitQuiz;
+    const pick = document.getElementById("qPick");
+    LANGS.forEach((L,i)=>{
+      const b=document.createElement("button");
+      b.className="tab"; b.style.setProperty("--acc",L.color);
+      b.setAttribute("aria-selected","true");
+      b.innerHTML=`${L.label}<small>${L.leg} · ${L.words.length} words</small>`;
+      b.onclick=()=>startQuiz(i);
+      pick.appendChild(b);
+    });
+    return;
+  }
+
+  const L = LANGS[quiz.langIdx];
+
+  if(quiz.phase==="done"){
+    const total = quiz.order.length;
+    const verdict = quiz.score===total ? "Trip-ready."
+      : quiz.score>=Math.ceil(total*0.7) ? "Nearly there — drill the misses below."
+      : "Keep at it — the speaker buttons in practice mode are your friend.";
+    let missHtml = "";
+    if(quiz.missed.length){
+      missHtml = `<div class="qmiss"><div class="qsay" style="color:var(--muted)">Worth another look</div>` +
+        quiz.missed.map(w=>`<div class="item"><span class="qword" style="font-size:18px">${esc(w.w)}</span>
+          <div class="gloss">${esc(w.en)}</div><div class="qphon">${esc(w.ph)}</div></div>`).join("") + `</div>`;
+    }
+    $quiz.style.setProperty("--acc",L.color);
+    $quiz.innerHTML = qHeader(esc(L.label)) + `
+      <div class="qcard qdone">
+        <div class="qsay">Final score</div>
+        <div class="score">${quiz.score} / ${total}</div>
+        <div class="gloss" style="margin-top:6px">${verdict}</div>
+        <div class="qactions">
+          <button class="qbtn2 primary" id="qAgain">Play again</button>
+          <button class="qbtn2" id="qLang">Switch language</button>
+        </div>
+        ${missHtml}
+      </div>`;
+    document.getElementById("qExit").onclick = exitQuiz;
+    document.getElementById("qAgain").onclick = ()=>startQuiz(quiz.langIdx);
+    document.getElementById("qLang").onclick = ()=>{ quiz={phase:"pick"}; renderQuiz(); };
+    return;
+  }
+
+  /* a round */
+  const word = L.words[quiz.order[quiz.idx]];
+  const bcp = word.bcp || L.bcp;
+  $quiz.style.setProperty("--acc",L.color);
+  $quiz.innerHTML = qHeader(`${quiz.idx+1} / ${quiz.order.length} · ✓ ${quiz.score}`) + `
+    <div class="qcard">
+      <div class="qsay">Say it in ${esc(L.label)}</div>
+      <div class="qprompt">${esc(word.en)}</div>
+      <button class="rbtn mic qmic" id="qMic" aria-label="Speak your answer">${ICON_MIC}</button>
+      <div class="fb" id="qFb"></div>
+      <div class="qactions">
+        <button class="qbtn2" id="qReveal">Show answer</button>
+        <button class="qbtn2 primary" id="qNext" style="display:none">Next →</button>
+      </div>
+    </div>`;
+  document.getElementById("qExit").onclick = exitQuiz;
+
+  const mic   = document.getElementById("qMic");
+  const fb    = document.getElementById("qFb");
+  const nextB = document.getElementById("qNext");
+  const revB  = document.getElementById("qReveal");
+  let settled = false;
+
+  const advance = ()=>{
+    if(!quiz || quiz.phase!=="round") return;
+    quiz.idx++;
+    if(quiz.idx >= quiz.order.length) quiz.phase="done";
+    renderQuiz();
+  };
+
+  const settle = (missed)=>{
+    settled = true;
+    stopActive();
+    mic.disabled = true; mic.style.opacity = .4;
+    revB.style.display = "none";
+    if(missed) quiz.missed.push(word);
+  };
+
+  mic.onclick = ()=>{
+    if(settled) return;
+    startRecognition(bcp, mic, {
+      onStart: ()=> setFb(fb,"info","Listening — say it now"),
+      onMsg:   (m)=>{ if(!settled) setFb(fb,"info",m); },
+      onAlts:  (alts)=>{
+        if(settled) return;
+        const {grade,heard} = scoreAttempt(word, alts);
+        if(grade==="ok"){
+          quiz.score++;
+          settle(false);
+          setFb(fb,"ok",`<span class="qword">${esc(word.w)}</span><div class="qphon">${esc(word.ph)}</div>`);
+          speak(word.w,bcp);
+          qTimer = setTimeout(advance, 1800);
+        }else{
+          const other = crossMatch(L, heard, quiz.order[quiz.idx]);
+          if(other){
+            setFb(fb,"near",`« ${esc(heard)} » is <b>${esc(other.w)}</b> — “${esc(other.en)}.” This prompt wants a different word.`);
+          }else if(grade==="near"){
+            setFb(fb,"near",`Close — heard <span class="heard">« ${esc(heard)} »</span>. Try again.`);
+          }else{
+            setFb(fb,"miss",`Heard <span class="heard">« ${esc(heard)} »</span> — try again, or show the answer.`);
+          }
+        }
+      }
+    });
+  };
+
+  revB.onclick = ()=>{
+    if(settled) return;
+    settle(true);
+    setFb(fb,"info",`<span class="qword">${esc(word.w)}</span><div class="qphon">${esc(word.ph)}</div>`);
+    speak(word.w,bcp);
+    nextB.style.display = "";
+    nextB.focus();
+  };
+  nextB.onclick = advance;
+}
+
 render();
 </script>
 </body>
